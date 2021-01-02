@@ -1,0 +1,483 @@
+<!doctype html> 
+<html lang="en"> 
+<head> 
+    <meta charset="UTF-8" />
+    <title>zutomayo-minigame-02</title>
+    <script src="//cdn.jsdelivr.net/npm/phaser@3.11.0/dist/phaser.js"></script>
+    <style type="text/css">
+        body {
+            margin: 0;
+        }
+    </style>
+</head>
+<body>
+<script type="text/javascript">
+
+var config = {
+    type: Phaser.AUTO,
+    width: 800,
+    height: 960,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            gravity: { y: 250 },
+            debug: false
+        },
+        input: {
+            activePointers: 2,
+        }
+    },
+    scene: {
+        preload: preload,
+        create: create,
+        update: update
+    }
+};
+
+var player;
+var enemy;
+var skytile;
+var walltile;
+var platforms;
+var goal;
+var goalcolider;
+var cursors;
+var direction = 0;
+var pstatus = 0;
+var pattack;
+var eattack;
+var kabe = 320;
+
+var actleft;
+var actright;
+var actatk;
+var actjump;
+
+var ctimer = 0;
+var timedEvent;
+var eattackTimer;
+var scoreText;
+var restartText;
+var trueendText;
+var normalendText;
+var badendText;
+var restartflg = false;
+
+var trueendcard;
+
+var game = new Phaser.Game(config);
+
+function preload ()
+{
+    this.load.image('sky', 'image/twilight2.png');
+    this.load.image('wall', 'image/platform5.png');
+    this.load.image('ground', 'image/platform4.png');
+    this.load.image('wall2', 'image/platform6.png');
+    this.load.image('trueendimage', 'image/trueend.png');
+    this.load.spritesheet('pchara', 'image/pchara4.png', { frameWidth: 210, frameHeight: 185 });
+    this.load.spritesheet('echara', 'image/echara2.png', { frameWidth: 200, frameHeight: 200 });
+    this.load.spritesheet('attack1', 'image/attack01.png', { frameWidth: 192, frameHeight: 192 });
+    this.load.spritesheet('attack2', 'image/attack03.png', { frameWidth: 192, frameHeight: 192 });
+}
+
+function init() {
+    direction = 0;
+    pstatus = 0;
+    kabe = 320;
+    ctimer = 0;
+    restartflg = false;
+
+    actleft = false;
+    actright = false;
+    actatk = false;
+    actjump = false;
+}
+
+function create ()
+{
+    init();
+    this.physics.world.setBounds(0, 0, 800, 600);
+
+    skytile = this.physics.add.sprite(800, 320, 'sky').setScale(4,4);
+    skytile.body.allowGravity= false;
+    walltile = this.physics.add.sprite(800, 500, 'wall').setScale(3);
+    walltile.body.allowGravity= false;
+
+    platforms = this.physics.add.sprite(800, 630, 'ground').setScale(3,1);
+    platforms.visible = false;
+    platforms.setCollideWorldBounds(true);
+
+    goal = this.physics.add.sprite(1000, 500, 'wall2').setScale(8,3);
+    goal.body.allowGravity= false;
+    goalcolider = this.physics.add.sprite(1000, 630, 'ground');
+    goalcolider.visible = false;
+    goalcolider.setCollideWorldBounds(true);
+
+    enemy = this.physics.add.sprite(800, 350, 'echara').setScale(2);
+    enemy.setBounce(0.2);
+    enemy.allowGravity= false;
+    this.anims.create({
+        key: 'enemyfirst',
+        frames: [ { key: 'echara', frame: 0 } ],
+    });
+    this.anims.create({
+        key: 'enemylast',
+        frames: [ { key: 'echara', frame: 1 } ],
+    });
+    enemy.anims.play('enemyfirst');
+
+    player = this.physics.add.sprite(200, 400, 'pchara').setScale(2);
+    player.setBounce(0.2);
+    player.body.allowGravity= true;
+    this.anims.create({
+        key: 'left0',
+        frames: this.anims.generateFrameNumbers('pchara', { start: 0, end: 5}),
+        frameRate: 8,
+        repeat: -1
+    });
+    this.anims.create({
+        key: 'left1',
+        frames: this.anims.generateFrameNumbers('pchara', { start: 14, end: 19}),
+        frameRate: 8,
+        repeat: -1
+    });
+    this.anims.create({
+        key: 'right0',
+        frames: this.anims.generateFrameNumbers('pchara', { start: 6, end: 11}),
+        frameRate: 8,
+        repeat: -1
+    });
+    this.anims.create({
+        key: 'right1',
+        frames: this.anims.generateFrameNumbers('pchara', { start: 20, end: 25}),
+        frameRate: 8,
+        repeat: -1
+    });
+    this.anims.create({
+        key: 'left0stop',
+        frames: [ { key: 'pchara', frame: 5 } ],
+    });
+    this.anims.create({
+        key: 'left1stop',
+        frames: [ { key: 'pchara', frame: 19 } ],
+    });
+    this.anims.create({
+        key: 'right0stop',
+        frames: [ { key: 'pchara', frame: 6 } ],
+    });
+    this.anims.create({
+        key: 'right1stop',
+        frames: [ { key: 'pchara', frame: 20 } ],
+    });
+    this.anims.create({
+        key: 'pdown',
+        frames: [ { key: 'pchara', frame: 26 } ],
+    });
+    this.anims.create({
+        key: 'rightlast',
+        frames: this.anims.generateFrameNumbers('pchara', { start: 20, end: 25 }),
+        frameRate: 8,
+        repeat: -1
+    });
+    this.anims.create({
+        key: 'rightlaststop',
+        frames: [ { key: 'pchara', frame: 20 } ],
+    });
+    this.anims.create({
+        key: 'jump',
+        frames: [ { key: 'pchara', frame: 12 } ],
+    });
+
+    eattack = this.physics.add.sprite(500, 360, 'attack2').setScale(2);
+    eattack.body.allowGravity= false;
+    this.anims.create({
+        key: 'eleftattack',
+        frames: this.anims.generateFrameNumbers('attack2', { start: 0, end: 8 }),
+        frameRate: 30,
+        showOnStart :true,
+        hideOnComplete: true,
+    })
+    eattack.visible = false;
+
+    pattack = this.physics.add.sprite(320, 360, 'attack1').setScale(2);
+    pattack.body.allowGravity= false;
+    this.anims.create({
+        key: 'rightattack',
+        frames: this.anims.generateFrameNumbers('attack1', { start: 0, end: 8 }),
+        frameRate: 30,
+        showOnStart :true,
+        hideOnComplete: true,
+    })
+    pattack.visible = false;
+
+    cursors = this.input.keyboard.createCursorKeys();
+
+    this.physics.add.collider(player, platforms);
+    this.physics.add.collider(enemy, platforms);
+    this.physics.add.collider(player, goalcolider, normalend, null, this);
+    //this.physics.add.overlap(player, goal, normalend, null, this);
+
+    timedEvent = this.time.addEvent({ delay: 1000, callback: onEvent, callbackScope: this, loop: true });
+    timedEvent.paused = true;
+    eattackTimer = this.time.addEvent({ delay: 3000, callback: onEatEvent, callbackScope: this, loop: true });
+
+    //scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', backgroundColor: '#000' });
+    restartText = this.add.text(300, 180, 'やり直す', {fontSize: '48px', backgroundColor: '#000', padding: 10}).setInteractive();
+    restartText.visible = false;
+
+    restartText.on('pointerdown', function () {
+        if (restartText.visible) {
+            restartflg = true;
+        }
+    })
+    restartText.on('pointerdown', function (pointer) {
+        if (restartText.visible) {
+            restartflg = true;
+        }
+    }, this);
+
+    let graphics = this.add.graphics();
+    graphics.fillStyle(0xFFFFFF, 1).fillRect(0, 600, 800, 360);
+
+    this.input.addPointer(3);
+    var btnleft = this.add.text(0, 700, '←', {font: 'bold 60pt Arial', color: '#000',  backgroundColor: '#999', padding: 10}).setInteractive();
+    var btnright = this.add.text(0, 700, '→', {font: 'bold 60pt Arial', color: '#000', backgroundColor: '#999',padding: 10}).setInteractive();
+    var btnattack = this.add.text(0, 700, 'attack', {font: 'bold 30pt Arial', color: '#000', backgroundColor: '#999',padding: 30}).setInteractive();
+    var btnjump = this.add.text(0, 700, 'jump', {font: 'bold 30pt Arial', color: '#000', backgroundColor: '#999',padding: 30}).setInteractive();
+
+    Phaser.Actions.GridAlign([ btnleft, btnright, btnattack, btnjump ], {
+        width: 40,
+        cellWidth: 200,
+        cellHeight: 200,
+        x: 120,
+        y: 720
+    });
+    this.input.on('gameobjectdown', function (pointer, gameObject) {
+        if (gameObject.text === '←') {
+            actleft = true;
+        }
+        if (gameObject.text === '→') {
+            actright = true;
+        }
+        if (gameObject.text === 'attack') {
+            actatk = true;
+        }
+        if (gameObject.text === 'jump') {
+            actjump = true;
+        }
+    });
+    this.input.on('gameobjectup', function (pointer, gameObject) {
+        if (gameObject.text === '←') {
+            actleft = false;
+        }
+        if (gameObject.text === '→') {
+            actright = false;
+        }
+        if (gameObject.text === 'attack') {
+            actatk = false;
+        }
+        if (gameObject.text === 'jump') {
+            actjump = false;
+        }
+    });
+}
+
+function update ()
+{
+    if (restartflg) {
+        this.registry.destroy();
+        this.events.off();
+        this.scene.restart();
+        return;
+    }
+
+    //scoreText.setText(player.x + ':' + player.y.toFixed(0) + ':' + walltile.x + ':' + goal.x + '-' + goal.y.toFixed(0) + ':' + goalcolider.x + '-' + goalcolider.y.toFixed(0));
+    eattack.x = enemy.x - 80;
+    platforms.x = walltile.x;
+    goal.x = walltile.x + 1600;
+    goalcolider.x = goal.x;
+
+    if (walltile.x < -650) {
+        platforms.setCollideWorldBounds(false);
+        platforms.y = -1000;
+    } else {
+        platforms.setCollideWorldBounds(true);
+        platforms.y = 630;
+    }
+    if (walltile.x - player.x > -1200 || player.y < 380) {
+        goalcolider.setCollideWorldBounds(false);
+        goalcolider.y = -1000;
+    } else {
+        goalcolider.setCollideWorldBounds(true);
+        goalcolider.y = 630;
+    }
+    if (ctimer > 0) {
+        return;
+    }
+    if (enemy.x - player.x < -250) {
+        restartText.visible = false;
+    }
+    if (player.y > 600) {
+        if (enemy.visible) {
+            trueend(this);
+        } else {
+            badend(this);
+        }
+    }
+
+    if ((cursors.space.isDown || actatk) && pattack.visible === false && pstatus === 0)
+    {
+        pattack.anims.play('rightattack');
+        if (eattack.x - player.x < 120) {
+            idling();
+            enemy.setTint(0xff0000);
+            pstatus = 4;
+            ctimer = 2;
+            timedEvent.paused = false;
+            kabe = -1000;
+            return;
+        }
+    }
+    if ((cursors.up.isDown || actjump) && player.body.touching.down && pstatus === 1)
+    {
+        player.setVelocityY(-360);
+        player.anims.play('jump', true);
+        pstatus = 5;
+    } else if (player.body.touching.down && pstatus === 5) {
+        pstatus = 3;
+        player.anims.play('right0stop', true);
+    }
+
+    if ((cursors.left.isDown || actleft) && walltile.x < 800 && pstatus < 2)
+    {
+        enemy.setVelocityX(180);
+        skytile.setVelocityX(180);
+        walltile.setVelocityX(180);
+        player.anims.play('left'+pstatus, true);
+        direction = -1;
+    }
+    else if ((cursors.right.isDown || actright) && walltile.x > kabe )
+    {
+        if (pstatus === -1) {
+            pstatus = 1;
+        }
+        enemy.setVelocityX(-180);
+        skytile.setVelocityX(-180);
+        walltile.setVelocityX(-180);
+        player.anims.play('right'+pstatus, true);
+        direction = 1;
+    }
+/*    else if (cursors.right.isDown && walltile.x > kabe)
+    {
+        if (pstatus < 3) {
+            pstatus = 3;
+        }
+        player.setVelocityX(180);
+        enemy.setVelocityX(0);
+        skytile.setVelocityX(0);
+        walltile.setVelocityX(0);
+        if (pstatus === 3) {
+            player.anims.play('rightlast', true);
+        }
+        direction = 1;
+    }*/
+    else if (pstatus > -1 && pstatus < 5)
+    {
+        idling();
+    }
+}
+
+function idling() {
+    player.setVelocityX(0);
+    enemy.setVelocityX(0);
+    skytile.setVelocityX(0);
+    walltile.setVelocityX(0);
+    if (pstatus === 3) {
+        return;
+    }
+    if (pstatus === 2) {
+        player.anims.play('rightlaststop');
+    } else if (direction === -1) {
+        player.anims.play('left'+pstatus+'stop');
+    } else {
+        player.anims.play('right'+pstatus+'stop');
+    }
+}
+
+function onEvent ()
+{
+    ctimer--;
+    if (ctimer === 2 && pstatus === 3)
+    {
+        player.clearTint();
+        pstatus = -1;
+        enemy.x = enemy.x + 100;
+        enemy.anims.play('enemylast');
+        player.anims.play('pdown');
+        restartText.visible = true;
+    }
+    if (ctimer === 0 && pstatus === 4) {
+        pstatus = -1;
+        enemy.visible = false;
+    }
+    if (ctimer === 0) {
+        timedEvent.paused = true;
+    }
+}
+
+function onEatEvent () {
+    if (enemy.x - player.x < 660 && enemy.visible === true && pstatus === 0) {
+        eattack.anims.play('eleftattack');
+        if (eattack.x - player.x < 110) {
+            player.setTint(0xff0000);
+            idling();
+            pstatus = 3;
+            ctimer = 5;
+            timedEvent.paused = false;
+            kabe = -1000;
+            return;
+        }
+    }
+}
+
+function trueend(target) {
+    pstatus = 3;
+    let graphics2 = target.add.graphics();
+    graphics2.fillStyle(0xFFFFFF, 1).fillRect(0, 0, 800, 960);
+    trueendcard = target.add.image(0,0,'trueendimage').setOrigin(0, 0).setScale(0.75);
+    target.add.text(450, 30, 'TrueEnd', {font: 'bold 60pt Arial', color: '#000', padding: 10});
+    ctimer = 99;
+}
+
+function normalend(player, goalcolider) {
+    if (ctimer == 99) {
+        return;
+    }
+    player.anims.play('left0stop');
+    pstatus = 3;
+    player.setVelocityX(0);
+    skytile.setVelocityX(0);
+    walltile.setVelocityX(0);
+    ctimer = 99;
+    normalendText = this.add.text(0, 0, "NormalEnd\n\n無事に向こう岸までたどり着けた。\n変わらない今の日々がまた続くだろう。\n立ちふさがった人物は本当に敵だったのか？", {fontSize: '32px', backgroundColor: '#000', padding: 10, wordWrap: true, wordWrapWidth: 450});
+    restartText.visible = true;
+    restartText.setInteractive();
+    goalcolider.y = -1000;
+}
+function badend(target) {
+    if (ctimer == 99) {
+        return;
+    }
+    pstatus = 3;
+    player.setVelocityX(0);
+    skytile.setVelocityX(0);
+    walltile.setVelocityX(0);
+    ctimer = 99;
+    badendText = target.add.text(0, 0, "BadEnd\n\nあなたはビルの屋上から落下した。\nミスではなく自分の意志でかもしれないが。\nそれを助けてくれる人はもういないのだから…", {fontSize: '32px', backgroundColor: '#000', padding: 10, wordWrap: true, wordWrapWidth: 450});
+    restartText.visible = true;
+    restartText.setInteractive();
+}
+
+</script>
+</body>
+</html>
