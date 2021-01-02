@@ -223,7 +223,7 @@ function create ()
     timedEvent.paused = true;
     eattackTimer = this.time.addEvent({ delay: 3000, callback: onEatEvent, callbackScope: this, loop: true });
 
-    scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', backgroundColor: '#000' });
+    //scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', backgroundColor: '#000' });
     restartText = this.add.text(300, 180, 'やり直す', {fontSize: '48px', backgroundColor: '#000', padding: 10}).setInteractive();
     restartText.visible = false;
 
@@ -255,7 +255,7 @@ function create ()
         y: 720
     });
     this.input.on('gameobjectdown', function (pointer, gameObject) {
-        if (ctimer < 0) {
+        if (ctimer < 20) {
             if (gameObject.text === '←') {
                 actleft = true;
             }
@@ -298,7 +298,7 @@ function update ()
         return;
     }
 
-    scoreText.setText(player.x + ':' + player.y.toFixed(0) + ':' + walltile.x + ':' + goal.x + '-' + goal.y.toFixed(0) + ':' + goalcolider.x + '-' + goalcolider.y.toFixed(0));
+    //scoreText.setText(player.x + ':' + player.y.toFixed(0) + ':' + walltile.x + ':' + goal.x + '-' + goal.y.toFixed(0) + ':' + goalcolider.x + '-' + goalcolider.y.toFixed(0));
     eattack.x = enemy.x - 80;
     platforms.x = walltile.x;
     goal.x = walltile.x + 1600;
