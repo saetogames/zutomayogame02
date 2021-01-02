@@ -294,6 +294,9 @@ function update ()
         this.scene.restart();
         return;
     }
+    if (endflg) {
+        return;
+    }
 
     scoreText.setText(player.x + ':' + player.y.toFixed(0) + ':' + walltile.x + ':' + goal.x + '-' + goal.y.toFixed(0) + ':' + goalcolider.x + '-' + goalcolider.y.toFixed(0));
     eattack.x = enemy.x - 80;
