@@ -20,7 +20,7 @@ var config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 250 },
+            gravity: { y: 280 },
             debug: false
         },
         input: {
@@ -467,6 +467,9 @@ function normalend(player, goalcolider) {
     if (endflg) {
         return;
     }
+    if (player.y > 390) {
+        return;
+    }
     endflg = true;
     player.anims.play('left0stop');
     pstatus = 3;
@@ -474,11 +477,12 @@ function normalend(player, goalcolider) {
     skytile.setVelocityX(0);
     walltile.setVelocityX(0);
     goal.setVelocityX(0);
+    goalcolider.setCollideWorldBounds(true);
+    goalcolider.y = 630;
     ctimer = 99;
     normalendText = this.add.text(0, 0, "NormalEnd\n\n無事に向こう岸までたどり着けた。\n変わらない今の日々がまた続くだろう。\n立ちふさがった人物は本当に敵だったのか？", {fontSize: '32px', backgroundColor: '#000', padding: 10, wordWrap: true, wordWrapWidth: 450});
     restartText.visible = true;
     restartText.setInteractive();
-    goalcolider.y = -1000;
 }
 function badend(target) {
     if (ctimer == 99) {
@@ -493,6 +497,8 @@ function badend(target) {
     skytile.setVelocityX(0);
     walltile.setVelocityX(0);
     goal.setVelocityX(0);
+    goalcolider.y = -1000;
+    goalcolider.setCollideWorldBounds(false);
     ctimer = 99;
     badendText = target.add.text(0, 0, "BadEnd\n\nあなたはビルの屋上から落下した。\nミスではなく自分の意志でかもしれないが。\nそれを助けてくれる人はもういないのだから…", {fontSize: '32px', backgroundColor: '#000', padding: 10, wordWrap: true, wordWrapWidth: 450});
     restartText.visible = true;
