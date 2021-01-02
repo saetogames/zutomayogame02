@@ -62,6 +62,7 @@ var trueendText;
 var normalendText;
 var badendText;
 var restartflg = false;
+var endflg = false;
 
 var trueendcard;
 
@@ -86,6 +87,7 @@ function init() {
     kabe = 320;
     ctimer = 0;
     restartflg = false;
+    endflg = false;
 
     actleft = false;
     actright = false;
@@ -221,7 +223,7 @@ function create ()
     timedEvent.paused = true;
     eattackTimer = this.time.addEvent({ delay: 3000, callback: onEatEvent, callbackScope: this, loop: true });
 
-    //scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', backgroundColor: '#000' });
+    scoreText = this.add.text(16, 16, 'score: 0', { fontSize: '32px', backgroundColor: '#000' });
     restartText = this.add.text(300, 180, 'やり直す', {fontSize: '48px', backgroundColor: '#000', padding: 10}).setInteractive();
     restartText.visible = false;
 
@@ -253,17 +255,19 @@ function create ()
         y: 720
     });
     this.input.on('gameobjectdown', function (pointer, gameObject) {
-        if (gameObject.text === '←') {
-            actleft = true;
-        }
-        if (gameObject.text === '→') {
-            actright = true;
-        }
-        if (gameObject.text === 'attack') {
-            actatk = true;
-        }
-        if (gameObject.text === 'jump') {
-            actjump = true;
+        if (ctimer < 0) {
+            if (gameObject.text === '←') {
+                actleft = true;
+            }
+            if (gameObject.text === '→') {
+                actright = true;
+            }
+            if (gameObject.text === 'attack') {
+                actatk = true;
+            }
+            if (gameObject.text === 'jump') {
+                actjump = true;
+            }
         }
     });
     this.input.on('gameobjectup', function (pointer, gameObject) {
@@ -291,7 +295,7 @@ function update ()
         return;
     }
 
-    //scoreText.setText(player.x + ':' + player.y.toFixed(0) + ':' + walltile.x + ':' + goal.x + '-' + goal.y.toFixed(0) + ':' + goalcolider.x + '-' + goalcolider.y.toFixed(0));
+    scoreText.setText(player.x + ':' + player.y.toFixed(0) + ':' + walltile.x + ':' + goal.x + '-' + goal.y.toFixed(0) + ':' + goalcolider.x + '-' + goalcolider.y.toFixed(0));
     eattack.x = enemy.x - 80;
     platforms.x = walltile.x;
     goal.x = walltile.x + 1600;
@@ -441,7 +445,11 @@ function onEatEvent () {
 }
 
 function trueend(target) {
+    if (endflg) {
+        return;
+    }
     pstatus = 3;
+    endflg = true;
     let graphics2 = target.add.graphics();
     graphics2.fillStyle(0xFFFFFF, 1).fillRect(0, 0, 800, 960);
     trueendcard = target.add.image(0,0,'trueendimage').setOrigin(0, 0).setScale(0.75);
@@ -453,11 +461,16 @@ function normalend(player, goalcolider) {
     if (ctimer == 99) {
         return;
     }
+    if (endflg) {
+        return;
+    }
+    endflg = true;
     player.anims.play('left0stop');
     pstatus = 3;
     player.setVelocityX(0);
     skytile.setVelocityX(0);
     walltile.setVelocityX(0);
+    goal.setVelocityX(0);
     ctimer = 99;
     normalendText = this.add.text(0, 0, "NormalEnd\n\n無事に向こう岸までたどり着けた。\n変わらない今の日々がまた続くだろう。\n立ちふさがった人物は本当に敵だったのか？", {fontSize: '32px', backgroundColor: '#000', padding: 10, wordWrap: true, wordWrapWidth: 450});
     restartText.visible = true;
@@ -468,10 +481,15 @@ function badend(target) {
     if (ctimer == 99) {
         return;
     }
+    if (endflg) {
+        return;
+    }
+    endflg = true;
     pstatus = 3;
     player.setVelocityX(0);
     skytile.setVelocityX(0);
     walltile.setVelocityX(0);
+    goal.setVelocityX(0);
     ctimer = 99;
     badendText = target.add.text(0, 0, "BadEnd\n\nあなたはビルの屋上から落下した。\nミスではなく自分の意志でかもしれないが。\nそれを助けてくれる人はもういないのだから…", {fontSize: '32px', backgroundColor: '#000', padding: 10, wordWrap: true, wordWrapWidth: 450});
     restartText.visible = true;
