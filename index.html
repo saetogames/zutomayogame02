@@ -58,6 +58,7 @@ var timedEvent;
 var eattackTimer;
 var scoreText;
 var restartText;
+var truehintText;
 var trueendText;
 var normalendText;
 var badendText;
@@ -87,6 +88,7 @@ function init() {
     kabe = 320;
     ctimer = 0;
     restartflg = false;
+    trueendText = false;
     endflg = false;
 
     actleft = false;
@@ -227,11 +229,6 @@ function create ()
     restartText = this.add.text(300, 180, 'やり直す', {fontSize: '48px', backgroundColor: '#000', padding: 10}).setInteractive();
     restartText.visible = false;
 
-    restartText.on('pointerdown', function () {
-        if (restartText.visible) {
-            restartflg = true;
-        }
-    })
     restartText.on('pointerdown', function (pointer) {
         if (restartText.visible) {
             restartflg = true;
@@ -284,6 +281,13 @@ function create ()
             actjump = false;
         }
     });
+
+    trueendText = this.add.text(300, 780, 'Hint:TrueEndの答えを表示', {fontSize: '16px', backgroundColor: '#000', padding: 10, wordWrap: true, wordWrapWidth: 300}).setInteractive();
+    trueendText.visible = true;
+
+    trueendText.on('pointerdown', function () {
+        trueendText.setText('MVを再現します。\n 1.まず攻撃をくらい倒されます。\n （横を通り抜け可能になります）\n 2.やり直しを押さず右に進みます。\n 3.そのまま飛ばずに進み落ちます。');
+    })
 }
 
 function update ()
